@@ -75,7 +75,12 @@ def main(args):
     if args.stage == "train":
         trainer.fit(model, data, ckpt_path=args.ckpt_path)
         if data.test_key is not None:
-            trainer.test(model, data.test_dataloader(), ckpt_path="best")
+            # "best" is only populated when a metric is monitored. Datasets
+            # without a validation split (cifar100) leave monitor=None, so a run
+            # shorter than save_every_n_epochs never writes a "best" checkpoint.
+            # save_last=True is always set, so "last" is available either way.
+            ckpt = "best" if data.val_key is not None else "last"
+            trainer.test(model, data.test_dataloader(), ckpt_path=ckpt)
     else:
         assert args.ckpt_path is not None
         trainer.test(model, data, ckpt_path=args.ckpt_path)
