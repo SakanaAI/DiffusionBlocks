@@ -95,6 +95,13 @@ CKPT_PATH="logs/path-to-last.ckpt"
 uv run main.py test cifar100 --model_type dblock --ckpt_path $CKPT
 ```
 
+## Euler discretization convention
+
+The sampler uses the signed step `dt = next_sigma - sigma`. See the
+[Euler discretization note](docs/euler_discretization.md) for the corresponding
+equations and consistent inference-loop indexing. The note clarifies the
+positive-step-size convention in the paper; the sampler's direction is unchanged.
+
 ## Acknowledgement
 
 The implementation of Vision Transformer in [vit.py](./vit.py) is based on [HuggingFace Transformers](https://github.com/huggingface/transformers). And, the implementation of EDM is based on [Stability-AI/generative-models](https://github.com/Stability-AI/generative-models).  
@@ -113,3 +120,4 @@ To cite our work, please use the following BibTeX:
   url       = {https://openreview.net/forum?id=pwVSmK71cS}
 }
 ```
+

@@ -282,10 +282,12 @@ class ViTDBlockModel(ViTModel):
             # to d
             d = (z - denoised) / sigma[:, None]
             dt = next_sigma - sigma
-            # euler step
+            # Descending sigma means dt <= 0. Equivalently, add
+            # ((sigma - next_sigma) / sigma) * (denoised - z).
             euler_step = z + dt[:, None] * d
             z = euler_step
         min_sigma = self.sigmas[-1].item()
         sigmas = torch.full((x.shape[0],), min_sigma, device=self.device)
         logits = self.denoise(x, z, sigmas)
         return logits
+
