@@ -1,8 +1,9 @@
 import torch
 from conftest import TINY
 
-from dblock_modules import BlockPartition, euler_sample
+from dblock_modules import BlockPartition
 from dit import DiT, get_2d_sincos_pos_embed
+from samplers import EulerSampler, sample
 
 
 def make_inputs(
@@ -44,6 +45,8 @@ def test_euler_sampler_recovers_two_point_data() -> None:
     """Exact denoiser for data ±1: D(z; σ) = tanh(z/σ²)."""
     sigmas = BlockPartition(3).get_discrete_sigmas(50)
     z = torch.randn(2000, 1) * (1 + sigmas[0] ** 2).sqrt()
-    out = euler_sample(lambda z, s, _: torch.tanh(z / s[:, None] ** 2), sigmas, z)
+    out = sample(
+        EulerSampler(), lambda z, s, _: torch.tanh(z / s[:, None] ** 2), sigmas, z
+    )
     assert torch.allclose(out.abs(), torch.ones_like(out), atol=1e-3)
     assert abs(out.mean()) < 0.1

@@ -21,7 +21,7 @@ import torch
 from torch.nn.attention import SDPBackend, sdpa_kernel
 from torch.utils.flop_counter import FlopCounterMode
 
-from config import DatasetName, ModelType, RunConfig, Stage
+from config import DatasetName, ModelType, RunConfig, SamplerType, Stage
 from dit import DiTLayer
 from model import DiTDBlockModel
 
@@ -116,6 +116,7 @@ def build_model(num_blocks: int, args: argparse.Namespace) -> DiTDBlockModel:
         num_labels=10,
         num_blocks=num_blocks,
         num_inference_steps=args.num_inference_steps,
+        sampler=args.sampler,
         cfg_scale=args.cfg_scale,
         class_dropout_prob=0.1,  # the paper's
     )
@@ -304,6 +305,12 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--train_batch_size", type=int, default=64)
     p.add_argument("--sample_batch_size", type=int, default=100)
     p.add_argument("--num_inference_steps", type=int, default=50)
+    p.add_argument(
+        "--sampler",
+        type=SamplerType,
+        choices=list(SamplerType),
+        default=SamplerType.EULER,
+    )
     p.add_argument("--cfg_scale", type=float, default=2.0)
     p.add_argument("--repeats", type=int, default=5)
     p.add_argument("--memory_steps", type=int, default=5)

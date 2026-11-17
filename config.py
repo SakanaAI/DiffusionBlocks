@@ -26,6 +26,11 @@ class ModelType(StrEnum):
     DIT = "dit"
 
 
+class SamplerType(StrEnum):
+    EULER = "euler"
+    HEUN = "heun"
+
+
 @dataclass(frozen=True)
 class RunConfig:
     stage: Stage
@@ -56,6 +61,7 @@ class RunConfig:
     num_blocks: int = 3
     gamma: float = 0.05
     num_inference_steps: int | None = None
+    sampler: SamplerType = SamplerType.EULER
     cfg_scale: float = 0.0
     class_dropout_prob: float = 0.0
     # set from the DataModule in main.py
@@ -76,6 +82,12 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("data_name", type=DatasetName, choices=list(DatasetName))
     p.add_argument("--model_type", type=ModelType, choices=list(ModelType))
     p.add_argument("--scheduler_type", type=SchedulerType)
+    p.add_argument(
+        "--sampler",
+        type=SamplerType,
+        choices=list(SamplerType),
+        help="ODE sampler for generation (--model_type dit only)",
+    )
     p.add_argument(
         "--scheduler_specific_kwargs",
         type=json.loads,

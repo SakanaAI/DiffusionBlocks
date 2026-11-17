@@ -5,7 +5,6 @@ Paper refs: §3.3 (equi-probability partitioning), App. C (overlap γ), Eq. (6) 
 """
 
 import random
-from collections.abc import Callable
 from dataclasses import dataclass, field
 from functools import cached_property
 
@@ -172,25 +171,3 @@ class EDMCoefficients:
 def edm_loss_weight(sigma: torch.Tensor, sigma_data: float = 0.5) -> torch.Tensor:
     """λ(σ) = (σ² + σ_data²) / (σ·σ_data)², which equals 1 / c_out²."""
     return (sigma**2 + sigma_data**2) / (sigma * sigma_data) ** 2
-
-
-def euler_sample(
-    denoise_fn: Callable[[torch.Tensor, torch.Tensor, int], torch.Tensor],
-    sigmas: torch.Tensor,
-    z: torch.Tensor,
-) -> torch.Tensor:
-    """Euler steps of the probability-flow ODE dz/dσ = (z − D(z; σ))/σ over the
-    descending `sigmas`, then a final denoise at sigmas[-1], as in the repo's
-    `ViTDBlockModel.diffusion_step`. `denoise_fn(z, σ, i)` gets a per-sample σ (N,)
-    and the step index i into `sigmas`; `z` starts at noise level sigmas[0]."""
-    s_in = z.new_ones(z.shape[0])
-    for i in range(sigmas.shape[0] - 1):
-        sigma, next_sigma = sigmas[i] * s_in, sigmas[i + 1] * s_in
-        d = (z - denoise_fn(z, sigma, i)) / _expand(sigma, z)
-        z = z + _expand(next_sigma - sigma, z) * d
-    return denoise_fn(z, sigmas[-1] * s_in, sigmas.shape[0] - 1)
-
-
-def _expand(v: torch.Tensor, like: torch.Tensor) -> torch.Tensor:
-    """(N,) → (N, 1, …) to broadcast against `like`."""
-    return v.view(-1, *([1] * (like.dim() - 1)))

@@ -134,7 +134,7 @@ def build_fid_metrics(dataset_name: str, image_size: int) -> MetricCollection:
 
 
 @runtime_checkable
-class Sampler(Protocol):
+class ImageGenerator(Protocol):
     def sample(
         self, labels: torch.Tensor, generator: torch.Generator | None = None
     ) -> torch.Tensor: ...
@@ -189,7 +189,7 @@ class SampleGrid(L.Callback):
     def on_test_epoch_end(
         self, trainer: L.Trainer, pl_module: L.LightningModule
     ) -> None:
-        assert isinstance(pl_module, Sampler)
+        assert isinstance(pl_module, ImageGenerator)
         labels = torch.arange(self.num_classes, device=pl_module.device)
         images = pl_module.sample(
             labels.repeat_interleave(self.per_class),

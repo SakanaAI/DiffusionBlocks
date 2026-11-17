@@ -9,7 +9,7 @@ from lightning.pytorch.callbacks import LearningRateMonitor, ModelCheckpoint
 from lightning.pytorch.loggers import WandbLogger
 from lightning.pytorch.strategies import DDPStrategy
 
-from config import ModelType, RunConfig, Stage, parse_args
+from config import ModelType, RunConfig, SamplerType, Stage, parse_args
 from data import ImageDataModule, load_data
 from evaluation import SampleGrid, SaveResults
 from model import load_model
@@ -25,11 +25,12 @@ def test_callbacks(
     """Evaluation run in the test stage, beyond what the model logs itself."""
     match args.model_type:
         case ModelType.DIT:
-            # per-seed names, so evaluations don't overwrite each other
+            # per-sampler, per-seed names, so evaluations don't overwrite each other
+            tag = "" if args.sampler == SamplerType.EULER else f"_{args.sampler}"
             return [
-                SampleGrid(Path(logdir) / "grid.png", data.num_labels),
+                SampleGrid(Path(logdir) / f"grid{tag}.png", data.num_labels),
                 SaveResults(
-                    Path(logdir) / f"results_seed{args.seed}.json", args.to_dict()
+                    Path(logdir) / f"results{tag}_seed{args.seed}.json", args.to_dict()
                 ),
             ]
         case _:
