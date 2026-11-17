@@ -136,10 +136,11 @@ It generates one image per CIFAR-10 test label (10k, 1,000 per class) and logs F
 [clean-fid](https://github.com/GaParmar/clean-fid)'s pipeline against its precomputed CIFAR-10 statistics:
 `test/fid_train` in `legacy_tensorflow` mode (closest to the ADM suite the paper uses for train FID; its
 Inception runs on the CPU, as it fails on MPS) and `test/fid_test` in `clean` mode, as in the paper.
-These FIDs use 10k samples and a single evaluation, not the paper's 50k samples and minimum of 3, so they
-are not directly comparable to its Table 2. Two files are written to `logs/<run>/`: `grid.png`, a 10×10 grid
-(one row per class, fixed noise so models can be compared), and `results.json`, with the FIDs and the run's
-config and metadata.
+These FIDs use 10k samples per evaluation, not the paper's 50k, so they are biased upward by a few points
+and are not directly comparable to its Table 2. For variance, evaluate with `--seed 0`, `1` and `2` and report
+the mean ± std and the minimum (the paper reports the minimum of 3). Two kinds of file are written to
+`logs/<run>/`: `grid.png`, a 10×10 grid (one row per class, fixed noise so models can be compared), and
+`results_seed<k>.json`, one per evaluation seed, with the FIDs and the run's config and metadata.
 
 **Cost benchmark (B=1 vs B=3):** FLOPs per generated image, training memory for one optimizer step and
 sampling throughput, on randomly initialized models (no checkpoint needed):

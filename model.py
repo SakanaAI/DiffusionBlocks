@@ -326,6 +326,17 @@ class DiTDBlockModel(DBlockModule):
             image_size=self.image_size, num_classes=self.num_labels
         )
         self.test_metrics = build_fid_metrics(cfg.data_name.value, self.image_size)
+        # The equi-probability inference schedule (App. H), rebuilt from the config
+        # rather than stored, so checkpoints load whether or not they contain it.
+        self.register_buffer(
+            "sigmas",
+            self.partition.get_discrete_sigmas(self.num_inference_steps),
+            persistent=False,
+        )
+
+    def on_load_checkpoint(self, checkpoint: dict[str, Any]) -> None:
+        """Some checkpoints store the schedule; it is rebuilt instead, so drop it."""
+        checkpoint["state_dict"].pop("sigmas", None)
 
     def configure_model(self) -> None:
         self.model = DiT(self.dit_config)
@@ -370,7 +381,7 @@ class DiTDBlockModel(DBlockModule):
     def shared_step(
         self, batch: Batch, step: Split = Split.TRAIN
     ) -> tuple[torch.Tensor, dict[str, torch.Tensor]]:
-        """EDM loss (paper Eq. 6) on one block, chosen uniformly for this batch."""
+        """EDM loss (paper Eq. 6) on the block drawn for this optimizer step."""
         x0, labels = batch["pixel_values"], batch["labels"]
         sigmas = self.get_sigmas(x0.shape[0])
         block_idx = self.estimate_target_layer(sigmas)

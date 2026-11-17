@@ -25,9 +25,12 @@ def test_callbacks(
     """Evaluation run in the test stage, beyond what the model logs itself."""
     match args.model_type:
         case ModelType.DIT:
+            # per-seed names, so evaluations don't overwrite each other
             return [
                 SampleGrid(Path(logdir) / "grid.png", data.num_labels),
-                SaveResults(Path(logdir) / "results.json", args.to_dict()),
+                SaveResults(
+                    Path(logdir) / f"results_seed{args.seed}.json", args.to_dict()
+                ),
             ]
         case _:
             return []
